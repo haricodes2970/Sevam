@@ -1,0 +1,36 @@
+# API Framework
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+
+# RAG & LLM
+langchain
+langchain-community
+langchain-openai
+openai
+
+# Embeddings & Vector DB
+sentence-transformers
+faiss-cpu
+chromadb
+
+# NLP
+spacy
+transformers
+torch
+
+# Database
+sqlalchemy
+psycopg2-binary
+alembic
+
+# Data processing
+beautifulsoup4
+requests
+pandas
+numpy
+
+# Testing
+pytest
+httpx

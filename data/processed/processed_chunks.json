@@ -1,0 +1,112 @@
+[
+  {
+    "chunk_id": "doc_001_chunk_0",
+    "parent_id": "doc_001",
+    "title": "Chest Pain",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Chest pain can have many causes ranging from minor to life-threatening. Common causes include acid reflux (gastroesophageal reflux disease (GERD)), where stomach acid flows back into the esophagus causing a burning sensation. Muscle strain from physical activity can cause chest wall pain that worsens with movement. Anxiety and panic attacks frequently cause chest tightness and pain. However, chest pain can also indicate serious conditions such as heart attack, where pain may radiate to the arm, jaw, or back and is accompanied by shortness of breath, sweating, and nausea. Angina is chest pain caused by reduced blood flow to the heart, typically triggered by exertion. Pulmonary embolism causes sudden sharp chest pain with difficulty breathing. Always seek emergency care for severe chest pain, especially with shortness of breath, arm pain, or sweating.",
+    "word_count": 131,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_002_chunk_0",
+    "parent_id": "doc_002",
+    "title": "Headache",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Headaches are one of the most common medical complaints. Tension headaches cause a dull, aching pain around the head, often described as a tight band. They are triggered by stress, poor posture, or eye strain. Migraines are intense, throbbing headaches usually on one side of the head, often accompanied by nausea, vomiting, and sensitivity to light and sound. They can last 4 to 72 hours. Cluster headaches cause severe burning pain around one eye and occur in clusters over weeks. Sinus headaches result from sinus congestion and inflammation, causing pressure around the forehead and cheeks. Dehydration headaches occur when the body lacks adequate fluids. Seek immediate care for sudden severe headaches, headaches with fever and stiff neck, or headaches following head injury as these may indicate meningitis or brain hemorrhage.",
+    "word_count": 130,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_003_chunk_0",
+    "parent_id": "doc_003",
+    "title": "Fever",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Fever is a temporary rise in body temperature, typically above 38 degrees Celsius or 100.4 degrees Fahrenheit. It is a natural immune response to infection. Common causes include bacterial infections such as strep throat and urinary tract infections, viral infections such as flu and COVID-19, and inflammatory conditions. Symptoms accompanying fever include chills, sweating, headache, muscle aches, and fatigue. Low-grade fevers under 38.5 Celsius often resolve without medication. Acetaminophen and ibuprofen can help reduce fever and relieve discomfort. Staying hydrated is important during fever. Seek medical care for fever above 39.5 Celsius, fever lasting more than 3 days, fever with severe headache and stiff neck, fever with rash, or fever in infants under 3 months.",
+    "word_count": 115,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_004_chunk_0",
+    "parent_id": "doc_004",
+    "title": "Sore Throat",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "A sore throat is pain or irritation in the throat that often worsens when swallowing. The most common cause is viral infection such as the common cold or flu. Strep throat is a bacterial infection caused by Streptococcus bacteria, causing severe throat pain, fever, swollen lymph nodes, and white patches on the tonsils. Tonsillitis is inflammation of the tonsils causing throat pain, difficulty swallowing, and swollen tonsils. Acid reflux can cause chronic sore throat due to stomach acid irritating the throat. Dry air and allergies can also cause throat irritation. Most viral sore throats resolve within a week without treatment. Strep throat requires antibiotic treatment. Gargling with warm salt water, throat lozenges, and staying hydrated can provide relief. See a doctor if sore throat is severe, lasts more than a week, is accompanied by high fever, or makes it difficult to breathe or swallow.",
+    "word_count": 144,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_005_chunk_0",
+    "parent_id": "doc_005",
+    "title": "Stomach Pain and Nausea",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Stomach pain and nausea have many possible causes. Gastroenteritis, commonly called stomach flu, is inflammation of the stomach and intestines caused by viral or bacterial infection, causing nausea, vomiting, diarrhea, and abdominal cramps. Food poisoning occurs after eating contaminated food and causes similar symptoms within hours of eating. Acid reflux and gastroesophageal reflux disease (GERD) cause upper abdominal pain and nausea after eating, especially after spicy or fatty foods. Irritable bowel syndrome causes recurring abdominal pain, bloating, and changes in bowel habits. Appendicitis causes pain that starts around the navel and moves to the lower right abdomen, worsening over time and accompanied by fever and nausea. Seek emergency care for severe sudden abdominal pain, pain with fever, pain after abdominal injury, or if appendicitis is suspected.",
+    "word_count": 126,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_006_chunk_0",
+    "parent_id": "doc_006",
+    "title": "Back Pain",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Back pain is extremely common and affects most people at some point. Muscle strain from lifting heavy objects or sudden movements is the most common cause of lower back pain. Poor posture while sitting or standing for long periods causes chronic back pain. Herniated discs occur when the soft cushion between vertebrae pushes out and presses on nerves, causing pain that may radiate down the leg in a condition called sciatica. Arthritis in the spine can cause chronic back stiffness and pain. Kidney infections and kidney stones can cause pain in the upper back and sides. Most back pain improves with rest, gentle stretching, heat or ice therapy, and over the counter pain relievers. Seek medical care for back pain with numbness or weakness in legs, pain after injury, pain with bowel or bladder problems, or severe pain that does not improve.",
+    "word_count": 142,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_007_chunk_0",
+    "parent_id": "doc_007",
+    "title": "Fatigue and Tiredness",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Fatigue is persistent tiredness that does not improve with rest. Common causes include poor sleep quality or insomnia, anemia where low iron levels reduce oxygen delivery to tissues, thyroid disorders where an underactive thyroid slows body functions, diabetes causing blood sugar imbalances, and depression which causes both physical and mental exhaustion. Dehydration even mild fluid loss causes fatigue and difficulty concentrating. Viral infections like flu and COVID-19 cause significant fatigue that can persist for weeks. Chronic fatigue syndrome is a complex disorder characterized by extreme fatigue lasting more than six months. Improving sleep habits, staying hydrated, regular exercise, and a balanced diet help manage fatigue. See a doctor if fatigue is severe, persistent, accompanied by unexplained weight loss, or significantly impacts daily life.",
+    "word_count": 123,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_008_chunk_0",
+    "parent_id": "doc_008",
+    "title": "Emergency Warning Signs",
+    "source": "emergency",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Certain symptoms require immediate emergency medical attention. Call emergency services immediately for chest pain or pressure especially with arm pain jaw pain or shortness of breath as these indicate possible heart attack. Sudden severe headache described as the worst headache of your life may indicate brain hemorrhage. Difficulty breathing or shortness of breath at rest requires urgent evaluation. Sudden weakness or numbness on one side of the body face drooping and speech difficulty are signs of stroke and require immediate treatment. Loss of consciousness or fainting with slow recovery needs emergency assessment. Severe allergic reactions with throat swelling and difficulty breathing require immediate epinephrine. Uncontrolled bleeding that does not stop with pressure needs emergency care. High fever with stiff neck and sensitivity to light may indicate meningitis. Never ignore these warning signs as delays in treatment can be life threatening.",
+    "word_count": 140,
+    "is_emergency": true
+  },
+  {
+    "chunk_id": "doc_009_chunk_0",
+    "parent_id": "doc_009",
+    "title": "Cough",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "A cough is a reflex action that clears the airways of mucus and irritants. Acute coughs lasting less than three weeks are most commonly caused by viral respiratory infections such as the common cold or flu. Allergies and hay fever trigger dry persistent coughs due to postnasal drip. Asthma causes a recurring cough especially at night or after exercise along with wheezing and breathlessness. Gastroesophageal reflux disease causes a chronic dry cough due to acid irritating the airway. Whooping cough is a bacterial infection causing severe coughing fits followed by a whooping sound when breathing in. Croup causes a distinctive barking cough in children. Staying hydrated, honey for soothing the throat, and steam inhalation can help relieve cough symptoms. See a doctor for coughs lasting more than three weeks, coughs producing blood, coughs with high fever, or coughs with significant breathing difficulty.",
+    "word_count": 142,
+    "is_emergency": false
+  },
+  {
+    "chunk_id": "doc_010_chunk_0",
+    "parent_id": "doc_010",
+    "title": "Dizziness",
+    "source": "general_medicine",
+    "chunk_index": 0,
+    "total_chunks": 1,
+    "content": "Dizziness is a term used to describe sensations of lightheadedness, unsteadiness, or vertigo. Vertigo causes a spinning sensation and is most commonly caused by benign paroxysmal positional vertigo where small crystals in the inner ear become displaced. Labyrinthitis is inner ear inflammation causing vertigo and hearing disturbance. Low blood pressure especially when standing up quickly causes lightheadedness known as orthostatic hypotension. Dehydration and low blood sugar cause dizziness and lightheadedness. Anemia reduces oxygen to the brain causing dizziness. Anxiety and panic attacks commonly cause dizziness and a feeling of unreality. Medications including blood pressure drugs can cause dizziness as a side effect. Seek emergency care for sudden severe dizziness with headache, dizziness with chest pain, dizziness with difficulty speaking or walking, or dizziness following head injury.",
+    "word_count": 126,
+    "is_emergency": false
+  }
+]
