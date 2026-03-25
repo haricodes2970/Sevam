@@ -34,7 +34,7 @@ class MedicalVectorStore:
         # Get or create the medical knowledge collection
         self.collection = self.client.get_or_create_collection(
             name=COLLECTION_NAME,
-            metadata={"description": "Medical knowledge base for Medic Night"}
+            metadata={"description": "Medical knowledge base for Sevam"}
         )
         print(f"  Collection '{COLLECTION_NAME}' ready — {self.collection.count()} docs stored")
 

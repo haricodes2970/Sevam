@@ -15,8 +15,8 @@ def _get_chatbot():
     global _chatbot
     if _chatbot is None:
         try:
-            from backend.services.chatbot import MedicNightChatbot
-            _chatbot = MedicNightChatbot()
+            from backend.services.chatbot import SevamChatbot
+            _chatbot = SevamChatbot()
         except Exception as e:
             raise HTTPException(status_code=503, detail=f"Chatbot unavailable: {str(e)}")
     return _chatbot

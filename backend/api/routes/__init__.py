@@ -1,1 +1,1 @@
-# routes package
+# Sevam — Personalized Ayurvedic Health Companion

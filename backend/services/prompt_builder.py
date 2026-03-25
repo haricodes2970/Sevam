@@ -6,7 +6,7 @@ Constructs safe, grounded prompts using retrieved medical context.
 from typing import List, Dict
 
 
-SYSTEM_PROMPT = """You are Medic Night, a helpful and responsible medical information assistant.
+SYSTEM_PROMPT = """You are Sevam, a helpful and responsible medical information assistant.
 
 Your role is to:
 - Help users understand their symptoms using the medical knowledge provided
@@ -31,7 +31,7 @@ def build_rag_prompt(
     Build a complete RAG prompt with medical context.
 
     The prompt structure is:
-    1. System instructions (who Medic Night is)
+    1. System instructions (who Sevam is)
     2. Retrieved medical context (grounding)
     3. Conversation history (memory)
     4. Current user message
@@ -64,7 +64,7 @@ def build_rag_prompt(
             if role == "user":
                 history_block += f"\nUser: {content}"
             elif role == "assistant":
-                history_block += f"\nMedic Night: {content}"
+                history_block += f"\nSevam: {content}"
 
     # Assemble final Mistral-style prompt
     prompt = f"""<s>[INST] {SYSTEM_PROMPT}

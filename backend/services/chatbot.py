@@ -1,5 +1,5 @@
 """
-Medic Night chatbot — main conversational engine.
+Sevam chatbot — main conversational engine.
 Combines NLP analysis, RAG retrieval, safety checks, and LLM generation.
 
 This is the brain of the entire system.
@@ -22,15 +22,15 @@ from backend.services.safety_guard import (
 from backend.services.prompt_builder import build_rag_prompt, build_general_prompt
 
 
-class MedicNightChatbot:
+class SevamChatbot:
     """
-    Main chatbot class for Medic Night.
+    Main chatbot class for Sevam.
     Orchestrates the full pipeline for every user message.
     """
 
     def __init__(self):
         """Initialize all components."""
-        print("🩺 Initializing Medic Night Chatbot...\n")
+        print("🩺 Initializing Sevam Chatbot...\n")
         self.retriever   = MedicalRetriever()
         self.llm         = HuggingFaceLLM()
         self.history     = []  # Conversation memory
@@ -134,10 +134,10 @@ class MedicNightChatbot:
 
 if __name__ == "__main__":
     print("="*55)
-    print("   🩺 Medic Night — Chatbot Test")
+    print("   🩺 Sevam — Chatbot Test")
     print("="*55)
 
-    bot = MedicNightChatbot()
+    bot = SevamChatbot()
 
     test_messages = [
         "I have a bad headache for 3 days",
@@ -149,6 +149,7 @@ if __name__ == "__main__":
     for msg in test_messages:
         print(f"\n👤 User: {msg}")
         result = bot.chat(msg)
-        print(f"\n🤖 Medic Night:\n{result['response']}")
+        print(f"\n🤖 Sevam:\n{result['response']}")
         print(f"\n   [Intent: {result['intent']} | Severity: {result['severity']} | Sources: {result['sources']}]")
         print("-"*55)
+

@@ -14,7 +14,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError(
         "DATABASE_URL not set in .env\n"
-        "Example: postgresql://postgres:password@localhost:5432/medicnight"
+        "Example: postgresql://postgres:password@localhost:5432/Sevam"
     )
 
 engine = create_engine(

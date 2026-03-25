@@ -1,7 +1,7 @@
-# 🩺 Medic Night — Project Progress Documentation
+# 🩺 Sevam — Project Progress Documentation
 
 > **Project:** SympDecoder — RAG-Powered Medical Symptom Triage Chatbot  
-> **Codename:** Medic Night  
+> **Codename:** Sevam  
 > **Stack:** Python 3.11, FastAPI, LangChain, spaCy, ChromaDB, FAISS, Groq (Llama 3.1), React  
 > **Status:** Phase 0 ✅ | Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 ✅ | Phase 5 🔜
 
@@ -22,7 +22,7 @@
 
 ## Project Overview
 
-Medic Night is an AI-powered medical assistant that helps users understand everyday symptoms using reliable medical knowledge. It uses **Retrieval-Augmented Generation (RAG)** to ground all responses in trusted medical documents — preventing hallucinations.
+Sevam is an AI-powered medical assistant that helps users understand everyday symptoms using reliable medical knowledge. It uses **Retrieval-Augmented Generation (RAG)** to ground all responses in trusted medical documents — preventing hallucinations.
 
 ### Full pipeline (end to end)
 
@@ -49,8 +49,8 @@ Safe grounded answer
 ## Project Structure
 
 ```
-MedicNight/
-└── medic-night/
+Sevam/
+└── sevam/
     ├── ai/
     │   ├── __init__.py
     │   ├── embeddings/
@@ -132,7 +132,7 @@ MedicNight/
 ### How to reactivate environment
 
 ```powershell
-cd "D:\git projects\MedicNight\medic-night"
+cd "D:\git projects\Sevam\sevam"
 venv\Scripts\activate
 ```
 
@@ -365,7 +365,7 @@ Docker, Vercel (frontend), Render (backend).
 
 ```powershell
 # 1. Activate environment
-cd "D:\git projects\MedicNight\medic-night"
+cd "D:\git projects\Sevam\sevam"
 venv\Scripts\activate
 
 # 2. Re-run data pipeline (if needed)
@@ -381,3 +381,4 @@ python backend/services/chatbot.py
 ---
 
 *Last updated: Phase 4 complete — ready for Phase 5 (FastAPI Backend)*
+

@@ -82,5 +82,5 @@ def run_indexing(chunks_path: str = CHUNKS_PATH) -> None:
 
 
 if __name__ == "__main__":
-    print("🔍 Medic Night — RAG Indexing Pipeline\n")
+    print("🔍 Sevam — RAG Indexing Pipeline\n")
     run_indexing()

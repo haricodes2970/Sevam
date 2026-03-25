@@ -1,1 +1,1 @@
-# database package
+# Sevam — Personalized Ayurvedic Health Companion

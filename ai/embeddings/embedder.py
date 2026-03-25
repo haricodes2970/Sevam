@@ -1,5 +1,5 @@
 """
-Embedding engine for Medic Night.
+Embedding engine for Sevam.
 Converts text into vector representations using SentenceTransformers.
 The same model must be used for both indexing and querying.
 """

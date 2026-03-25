@@ -65,7 +65,7 @@ def print_analysis(result: dict) -> None:
 
 
 if __name__ == "__main__":
-    print("🧠 Medic Night — NLP Symptom Analyzer\n")
+    print("🧠 Sevam — NLP Symptom Analyzer\n")
 
     test_messages = [
         "I have a bad headache for 3 days and feel nauseous",

@@ -99,7 +99,7 @@ def print_results(results: list, query: str) -> None:
 
 
 if __name__ == "__main__":
-    print("🔍 Medic Night — RAG Retrieval Test\n")
+    print("🔍 Sevam — RAG Retrieval Test\n")
 
     retriever = MedicalRetriever()
 

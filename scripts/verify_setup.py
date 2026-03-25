@@ -10,7 +10,7 @@ def check(label, fn):
     except Exception as e:
         print(f"  ✗  {label} — {e}")
 
-print("\n🩺 Medic Night — Setup Verification\n")
+print("\n🩺 Sevam — Setup Verification\n")
 
 check("FastAPI",             lambda: __import__("fastapi"))
 check("LangChain",           lambda: __import__("langchain"))

@@ -1,4 +1,4 @@
-# 🩺 Medic Night — Phase 7: React Frontend
+# 🩺 Sevam — Phase 7: React Frontend
 
 > **Project:** SympDecoder — RAG-Powered Medical Symptom Triage Chatbot
 > **Stack:** React 18 · Vite · Tailwind CSS · Outfit + IBM Plex Mono fonts
@@ -148,7 +148,7 @@ app.add_middleware(
 ### 2. Start the backend
 
 ```powershell
-cd "D:\git projects\MedicNight\medic-night"
+cd "D:\git projects\Sevam\sevam"
 venv\Scripts\activate
 python run_api.py
 # → http://localhost:8000
@@ -230,3 +230,4 @@ git push
 ---
 
 *Last updated: Phase 7 complete — ready for Phase 8 (Testing + Docker + Deployment)*
+

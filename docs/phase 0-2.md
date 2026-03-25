@@ -1,7 +1,7 @@
-# 🩺 Medic Night — Project Progress Documentation
+# 🩺 Sevam — Project Progress Documentation
 
 > **Project:** SympDecoder — RAG-Powered Medical Symptom Triage Chatbot  
-> **Codename:** Medic Night  
+> **Codename:** Sevam  
 > **Stack:** Python 3.11, FastAPI, LangChain, spaCy, ChromaDB, FAISS, React  
 > **Status:** Phase 0 ✅ | Phase 1 ✅ | Phase 2 ✅ | Phase 3 🔜
 
@@ -20,7 +20,7 @@
 
 ## Project Overview
 
-Medic Night is an AI-powered medical assistant that helps users understand everyday symptoms using reliable medical knowledge. It uses **Retrieval-Augmented Generation (RAG)** to ground all responses in trusted medical documents — preventing hallucinations.
+Sevam is an AI-powered medical assistant that helps users understand everyday symptoms using reliable medical knowledge. It uses **Retrieval-Augmented Generation (RAG)** to ground all responses in trusted medical documents — preventing hallucinations.
 
 ### How it works (end to end)
 
@@ -41,8 +41,8 @@ Safe grounded response
 ## Project Structure
 
 ```
-MedicNight/
-└── medic-night/
+Sevam/
+└── sevam/
     ├── ai/
     │   ├── __init__.py
     │   ├── embeddings/
@@ -128,7 +128,7 @@ MedicNight/
 ### Verification output
 
 ```
-🩺 Medic Night — Setup Verification
+🩺 Sevam — Setup Verification
 
   ✓  FastAPI
   ✓  LangChain
@@ -154,7 +154,7 @@ spaCy model check:
 ### How to reactivate environment
 
 ```powershell
-cd "D:\git projects\MedicNight\medic-night"
+cd "D:\git projects\Sevam\sevam"
 venv\Scripts\activate
 ```
 
@@ -235,7 +235,7 @@ Scraping medical sites like Mayo Clinic has legal restrictions and rate limits. 
 ### Pipeline run output
 
 ```
-🩺 Medic Night — Knowledge Ingestion Pipeline
+🩺 Sevam — Knowledge Ingestion Pipeline
 
 --- Step 1: Loading documents ---
   Loading: data/knowledge_sources/medical_knowledge.json
@@ -265,7 +265,7 @@ Scraping medical sites like Mayo Clinic has legal restrictions and rate limits. 
 ### How to re-run the pipeline
 
 ```powershell
-cd "D:\git projects\MedicNight\medic-night"
+cd "D:\git projects\Sevam\sevam"
 python data/ingestion_pipeline.py
 ```
 
@@ -362,7 +362,7 @@ Intent   : SYMPTOM_ANALYSIS   Severity: MEDIUM     Emergency: False
 ### How to run the analyzer
 
 ```powershell
-cd "D:\git projects\MedicNight\medic-night"
+cd "D:\git projects\Sevam\sevam"
 python ai/symptom_extraction/analyzer.py
 ```
 
@@ -393,3 +393,4 @@ Semantic search         — find relevant chunks for any query
 ---
 
 *Last updated: Phase 2 complete — ready for Phase 3*
+

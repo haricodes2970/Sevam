@@ -1,7 +1,7 @@
-# 🩺 Medic Night — Project Progress Documentation
+# 🩺 Sevam — Project Progress Documentation
 
 > **Project:** SympDecoder — RAG-Powered Medical Symptom Triage Chatbot
-> **Codename:** Medic Night
+> **Codename:** Sevam
 > **Stack:** Python 3.11, FastAPI, LangChain, spaCy, ChromaDB, FAISS, Groq (Llama 3.1), React
 > **Status:** Phase 0 ✅ | Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 ✅ | Phase 5 ✅ | Phase 6 ✅ | Phase 7 🔜
 
@@ -19,7 +19,7 @@
 
 ## Project Overview
 
-Medic Night is an AI-powered medical assistant that helps users understand everyday symptoms using reliable medical knowledge. It uses **Retrieval-Augmented Generation (RAG)** to ground all responses in trusted medical documents — preventing hallucinations.
+Sevam is an AI-powered medical assistant that helps users understand everyday symptoms using reliable medical knowledge. It uses **Retrieval-Augmented Generation (RAG)** to ground all responses in trusted medical documents — preventing hallucinations.
 
 ### Full pipeline (end to end)
 
@@ -97,7 +97,7 @@ Swagger UI at /docs         ← test all endpoints in browser
 ### How to run
 
 ```powershell
-cd "D:\git projects\MedicNight\medic-night"
+cd "D:\git projects\Sevam\sevam"
 venv\Scripts\activate
 python run_api.py
 ```
@@ -143,7 +143,7 @@ services/db_service.py      ← all CRUD operations
       ↓
 routes/feedback.py          ← POST /feedback endpoint
       ↓
-PostgreSQL — medicnight DB  ← 4 tables live on port 5432
+PostgreSQL — Sevam DB  ← 4 tables live on port 5432
 ```
 
 ### Files created
@@ -194,7 +194,7 @@ alembic upgrade head
 ### PostgreSQL verification
 
 ```sql
-medicnight=# \dt
+Sevam=# \dt
 
                List of tables
  Schema |      Name       | Type  |  Owner
@@ -343,7 +343,7 @@ to address: Non-recoverable failure in name resolution
 **Root cause:**
 URL parser treated `@` in password as the host separator, turning:
 ```
-postgresql://postgres:pass@7078@localhost:5432/medicnight
+postgresql://postgres:pass@7078@localhost:5432/Sevam
 ```
 into an invalid host `7078@localhost`.
 
@@ -352,7 +352,7 @@ URL-encode `@` as `%40` in the password.
 
 In `.env`:
 ```env
-DATABASE_URL=postgresql://postgres:pass%40word@localhost:5432/medicnight
+DATABASE_URL=postgresql://postgres:pass%40word@localhost:5432/Sevam
 ```
 
 ---
@@ -365,7 +365,7 @@ After fixing the `@` → `%40` in `alembic.ini`, the `%` character itself broke 
 **Error:**
 ```
 configparser.InterpolationSyntaxError: '%' must be followed by '%' or '(',
-found: '%407078@localhost:5432/medicnight'
+found: '%407078@localhost:5432/Sevam'
 ```
 
 **Root cause:**
@@ -374,7 +374,7 @@ found: '%407078@localhost:5432/medicnight'
 **Fix:**
 In `alembic.ini` only (not in `.env`):
 ```ini
-sqlalchemy.url = postgresql://postgres:pass%%40word@localhost:5432/medicnight
+sqlalchemy.url = postgresql://postgres:pass%%40word@localhost:5432/Sevam
 ```
 
 Note: `.env` keeps single `%40`. Only `alembic.ini` needs `%%40`.
@@ -412,8 +412,8 @@ Ran `alembic upgrade head` while still inside the PostgreSQL interactive shell.
 
 **Symptom:**
 ```
-medicnight=# alembic upgrade head
-medicnight-#
+Sevam=# alembic upgrade head
+Sevam-#
 ```
 The command was silently accepted as SQL input, not executed.
 
@@ -459,8 +459,8 @@ PostgreSQL          ← cloud database (Railway / Supabase)
 
 ```powershell
 # 1. Navigate and activate
-cd "D:\git projects\MedicNight\medic-night"
-& "d:\git projects\MedicNight\medic-night\venv\Scripts\Activate.ps1"
+cd "D:\git projects\Sevam\sevam"
+& "d:\git projects\Sevam\sevam\venv\Scripts\Activate.ps1"
 
 # 2. Add PostgreSQL to PATH (until permanent fix applied)
 $env:PATH += ";D:\Applications\PostgresSQL\bin"
@@ -482,3 +482,4 @@ Phase 5 + 6 complete — FastAPI backend + PostgreSQL database layer
 ---
 
 *Last updated: Phase 6 complete — ready for Phase 7 (React Frontend)*
+

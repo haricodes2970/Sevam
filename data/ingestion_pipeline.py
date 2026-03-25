@@ -103,7 +103,7 @@ def print_sample(chunks: list, n: int = 2) -> None:
 
 
 if __name__ == "__main__":
-    print("🩺 Medic Night — Knowledge Ingestion Pipeline\n")
+    print("🩺 Sevam — Knowledge Ingestion Pipeline\n")
 
     input_path  = "data/knowledge_sources/medical_knowledge.json"
     output_path = "data/processed/processed_chunks.json"
