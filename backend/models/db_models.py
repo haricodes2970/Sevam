@@ -1,5 +1,5 @@
 """
-Pydantic models for Sevam's 5 MongoDB collections.
+Pydantic models for Sevam's MongoDB collections.
 
 Each model mirrors one collection document. Motor stores/retrieves plain dicts;
 call .model_dump() before inserting and Model(**doc) after reading.
@@ -7,7 +7,7 @@ call .model_dump() before inserting and Model(**doc) after reading.
 
 import uuid
 from datetime import datetime, timezone
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -37,16 +37,39 @@ class HealthProfile(BaseModel):
     conditions: list[str] = Field(default_factory=list)
     allergies: list[str] = Field(default_factory=list)
     medications: list[str] = Field(default_factory=list)
-    lifestyle: dict = Field(default_factory=dict)
+    lifestyle: str = ""
+    sleep_hours: float = 0.0
+    stress_level: str = ""
+    activity_level: str = ""
 
 
 class UserModel(BaseModel):
     """Document schema for the *users* collection."""
     user_id: str = Field(default_factory=_new_uuid)
     created_at: datetime = Field(default_factory=_utcnow)
-    prakriti: Literal["Vata", "Pitta", "Kapha", "Unknown"] = "Unknown"
+    prakriti: str = "Unknown"
     dosha_scores: DoshaScores = Field(default_factory=DoshaScores)
     health_profile: HealthProfile = Field(default_factory=HealthProfile)
+
+
+# ── 1b. user_profiles (full onboarding profile) ───────────────────────────────
+
+class UserProfile(BaseModel):
+    """Full onboarding profile stored in the *user_profiles* collection.
+
+    Created once during the dosha questionnaire flow and updated on PUT.
+    """
+
+    user_id: str
+    name: str = ""
+    age: Optional[int] = None
+    gender: str = ""
+    created_at: datetime = Field(default_factory=_utcnow)
+    prakriti: str = "Unknown"
+    dosha_scores: dict[str, Any] = Field(default_factory=dict)
+    dosha_percentages: dict[str, Any] = Field(default_factory=dict)
+    health_profile: HealthProfile = Field(default_factory=HealthProfile)
+    onboarding_complete: bool = False
 
 
 # ── 2. sessions ───────────────────────────────────────────────────────────────
@@ -82,6 +105,7 @@ class FoodQualities(BaseModel):
     hot_cold: Optional[str] = None        # "hot" | "cold" | "neutral"
     heavy_light: Optional[str] = None     # "heavy" | "light"
     spicy_bland: Optional[str] = None     # "spicy" | "bland"
+    oily_dry: Optional[str] = None        # "oily" | "dry"
     dosha_impact: dict = Field(default_factory=dict)  # {"vata": "aggravates", ...}
 
 

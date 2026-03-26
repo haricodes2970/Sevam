@@ -12,6 +12,7 @@ from typing import Optional
 from backend.database.connection import get_database
 from backend.models.db_models import (
     UserModel,
+    UserProfile,
     SessionModel,
     MessageModel,
     FoodLogModel,
@@ -278,6 +279,90 @@ async def get_recent_food_logs(user_id: str, days: int = 7) -> list[FoodLogModel
         raise
 
 
+async def get_recent_food_logs_hours(user_id: str, hours: int = 48) -> list[FoodLogModel]:
+    """Retrieve food logs for a user from the last N hours.
+
+    Args:
+        user_id: The user whose logs to fetch.
+        hours:   Look-back window in hours (default 48).
+
+    Returns:
+        List of FoodLogModel objects ordered by timestamp descending.
+    """
+    try:
+        db = get_database()
+        since = _utcnow() - timedelta(hours=hours)
+        cursor = db.food_logs.find(
+            {"user_id": user_id, "timestamp": {"$gte": since}},
+            sort=[("timestamp", -1)],
+        )
+        docs = await cursor.to_list(length=None)
+        return [FoodLogModel(**doc) for doc in docs]
+    except Exception as exc:
+        logger.error("get_recent_food_logs_hours failed for user %s: %s", user_id, exc)
+        raise
+
+
+async def get_food_logs_by_date(user_id: str, days: int = 7) -> list[FoodLogModel]:
+    """Retrieve food logs for a user grouped by recent days.
+
+    Alias for get_recent_food_logs for semantic clarity in route handlers.
+
+    Args:
+        user_id: The user whose logs to fetch.
+        days:    Look-back window in days (default 7).
+
+    Returns:
+        List of FoodLogModel objects ordered by timestamp descending.
+    """
+    return await get_recent_food_logs(user_id, days=days)
+
+
+async def get_today_food_logs(user_id: str) -> list[FoodLogModel]:
+    """Retrieve today's food logs for a user.
+
+    Args:
+        user_id: The user whose logs to fetch.
+
+    Returns:
+        List of FoodLogModel objects from today, ordered by timestamp descending.
+    """
+    try:
+        db = get_database()
+        now = _utcnow()
+        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        cursor = db.food_logs.find(
+            {"user_id": user_id, "timestamp": {"$gte": start_of_day}},
+            sort=[("timestamp", -1)],
+        )
+        docs = await cursor.to_list(length=None)
+        return [FoodLogModel(**doc) for doc in docs]
+    except Exception as exc:
+        logger.error("get_today_food_logs failed for user %s: %s", user_id, exc)
+        raise
+
+
+async def delete_food_log(log_id: str) -> bool:
+    """Delete a specific food log by log_id.
+
+    Args:
+        log_id: The log_id of the food log to delete.
+
+    Returns:
+        True if a document was deleted, False if not found.
+    """
+    try:
+        db = get_database()
+        result = await db.food_logs.delete_one({"log_id": log_id})
+        if result.deleted_count > 0:
+            logger.info("Deleted food log %s", log_id)
+            return True
+        return False
+    except Exception as exc:
+        logger.error("delete_food_log failed for %s: %s", log_id, exc)
+        raise
+
+
 # ── 5. feedback ───────────────────────────────────────────────────────────────
 
 async def save_feedback(
@@ -310,4 +395,122 @@ async def save_feedback(
         return feedback
     except Exception as exc:
         logger.error("save_feedback failed: %s", exc)
+        raise
+
+
+# ── 6. user_profiles ──────────────────────────────────────────────────────────
+
+async def create_user_profile(profile_data: dict) -> str:
+    """Insert a new UserProfile document into the *user_profiles* collection.
+
+    Args:
+        profile_data: Dict matching the UserProfile schema.
+
+    Returns:
+        The user_id of the created profile.
+    """
+    try:
+        db = get_database()
+        profile = UserProfile(**profile_data)
+        doc = profile.model_dump()
+        await db.user_profiles.insert_one(doc)
+        logger.info("Created user profile for %s", profile.user_id)
+        return profile.user_id
+    except Exception as exc:
+        logger.error("create_user_profile failed: %s", exc)
+        raise
+
+
+async def get_user_profile(user_id: str) -> Optional[UserProfile]:
+    """Fetch a UserProfile document by user_id.
+
+    Args:
+        user_id: The user's ID.
+
+    Returns:
+        UserProfile if found, None otherwise.
+    """
+    try:
+        db = get_database()
+        doc = await db.user_profiles.find_one({"user_id": user_id})
+        return UserProfile(**doc) if doc else None
+    except Exception as exc:
+        logger.error("get_user_profile failed for %s: %s", user_id, exc)
+        raise
+
+
+async def update_user_profile_fields(user_id: str, updates: dict) -> bool:
+    """Partially update a UserProfile document with arbitrary field updates.
+
+    Args:
+        user_id: The user's ID.
+        updates: Dict of fields to set (e.g. {"age": 26, "prakriti": "Vata"}).
+
+    Returns:
+        True if a document was modified, False if not found.
+    """
+    try:
+        db = get_database()
+        if not updates:
+            return False
+        result = await db.user_profiles.update_one(
+            {"user_id": user_id}, {"$set": updates}
+        )
+        return result.modified_count > 0
+    except Exception as exc:
+        logger.error("update_user_profile_fields failed for %s: %s", user_id, exc)
+        raise
+
+
+async def update_dosha(
+    user_id: str,
+    prakriti: str,
+    scores: dict,
+    percentages: dict,
+) -> bool:
+    """Update the dosha assessment fields on an existing UserProfile.
+
+    Args:
+        user_id:     The user's ID.
+        prakriti:    Dominant dosha label (e.g. "Pitta").
+        scores:      Raw dosha scores {"vata": int, "pitta": int, "kapha": int}.
+        percentages: Percentage breakdown {"vata": float, ...}.
+
+    Returns:
+        True if a document was modified, False if not found.
+    """
+    try:
+        db = get_database()
+        result = await db.user_profiles.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "prakriti": prakriti,
+                    "dosha_scores": scores,
+                    "dosha_percentages": percentages,
+                    "onboarding_complete": True,
+                }
+            },
+        )
+        return result.modified_count > 0
+    except Exception as exc:
+        logger.error("update_dosha failed for %s: %s", user_id, exc)
+        raise
+
+
+async def check_user_exists(user_id: str) -> bool:
+    """Check whether a UserProfile document exists for the given user_id.
+
+    Args:
+        user_id: The user's ID.
+
+    Returns:
+        True if the profile exists, False otherwise.
+    """
+    try:
+        db = get_database()
+        doc = await db.user_profiles.find_one({"user_id": user_id}, {"_id": 1})
+        return doc is not None
+    except Exception as exc:
+        logger.error("check_user_exists failed for %s: %s", user_id, exc)
         raise
