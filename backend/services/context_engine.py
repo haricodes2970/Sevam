@@ -16,8 +16,13 @@ from typing import Optional
 from backend.services.db_service import (
     get_user,
     get_recent_food_logs_hours,
-    get_user_profile,
 )
+
+try:
+    from backend.services.db_service import get_user_profile
+except ImportError:
+    # Backward compatibility if older db_service lacks get_user_profile.
+    get_user_profile = None  # type: ignore[assignment]
 from backend.services.food_analyzer import FoodAnalyzer
 from backend.services.correlation_engine import CorrelationEngine
 
@@ -68,7 +73,7 @@ class ContextEngine:
         user_name = ""
 
         try:
-            full_profile = await get_user_profile(user_id)
+            full_profile = await get_user_profile(user_id) if get_user_profile else None
             if full_profile:
                 prakriti = full_profile.prakriti
                 dosha_scores = full_profile.dosha_scores

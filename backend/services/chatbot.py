@@ -6,8 +6,8 @@ Full pipeline per message:
   2. Safety guard (emergency check)
   3. Context engine → user profile + food logs + correlation
   4. RAG retriever → Ayurvedic knowledge chunks
-  5. Prompt builder → (system_msg, user_msg) for Groq
-  6. Groq LLM → generate response
+  5. Prompt builder → (system_msg, user_msg) for Ollama
+  6. Ollama LLM → generate response
   7. Safety wrapper → add disclaimer
   8. Return enriched result dict
 """
@@ -18,7 +18,7 @@ import logging
 from typing import Dict, List, Optional
 
 from backend.rag_pipeline.retriever import MedicalRetriever
-from backend.services.llm_client import HuggingFaceLLM
+from backend.services.llm_client import generate_chat
 from backend.services.safety_guard import (
     is_emergency,
     apply_safety_wrapper,
@@ -45,7 +45,6 @@ class SevamChatbot:
         """Initialise retriever, LLM, and context engine."""
         logger.info("Initialising Sevam Chatbot...")
         self.retriever = MedicalRetriever()
-        self.llm = HuggingFaceLLM()
         self.context_engine = ContextEngine()
         self._history: List[Dict] = []   # simple in-process conversation memory
         logger.info("Sevam Chatbot ready.")
@@ -200,16 +199,15 @@ class SevamChatbot:
         Call the LLM to generate a response.
 
         Args:
-            system_message: Groq system role content
-            user_message:   Groq user role content
+            system_message: Ollama system role content
+            user_message:   Ollama user role content
 
         Returns:
             Generated text string
         """
-        return self.llm.generate_chat(
+        return generate_chat(
             system_message=system_message,
             user_message=user_message,
-            max_tokens=600,
         )
 
     def _infer_severity(self, context: Dict) -> str:
