@@ -48,7 +48,15 @@ class MedicalRetriever:
             n_results=n_results,
         )
 
-        return results
+        seen_titles = set()
+        unique_results = []
+        for result in results:
+            title = result.get("title", "")
+            if title not in seen_titles:
+                seen_titles.add(title)
+                unique_results.append(result)
+
+        return unique_results
 
 
 def print_results(results: list, query: str) -> None:

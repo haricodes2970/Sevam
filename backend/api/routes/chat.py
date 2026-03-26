@@ -87,9 +87,10 @@ async def chat(request: ChatRequest) -> ChatResponse:
         logger.warning("DB save failed (non-fatal) for session %s: %s", session_id, db_exc)
 
     # ── Build and return response ─────────────────────────────────────────────
+    sources = list(dict.fromkeys(result.get("sources", [])))
     return ChatResponse(
         response=result.get("response", ""),
-        sources=result.get("sources", []),
+        sources=sources,
         severity=severity,
         is_emergency=result.get("is_emergency", False),
         session_id=session_id,
