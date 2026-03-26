@@ -32,7 +32,10 @@ class HuggingFaceLLM:
 
     def generate(self, prompt: str, max_tokens: int = 512) -> str:
         """
-        Generate a response using Groq API.
+        Generate a response using Groq API (legacy single-string interface).
+
+        The prompt is sent as the user message with a generic Sevam system prompt.
+        Prefer generate_chat() for new code which allows a custom system message.
 
         Args:
             prompt: Full formatted prompt string
@@ -41,24 +44,44 @@ class HuggingFaceLLM:
         Returns:
             Generated response string
         """
+        return self.generate_chat(
+            system_message=(
+                "You are Sevam, a helpful and responsible Ayurvedic health "
+                "companion. Base your answers only on the provided context. "
+                "Never give definitive diagnoses. Always recommend consulting "
+                "a qualified Ayurvedic practitioner or doctor. "
+                "Keep responses clear, empathetic and concise."
+            ),
+            user_message=prompt,
+            max_tokens=max_tokens,
+        )
+
+    def generate_chat(
+        self,
+        system_message: str,
+        user_message: str,
+        max_tokens: int = 600,
+    ) -> str:
+        """
+        Generate a response using Groq API with explicit system and user messages.
+
+        This is the preferred method for the full pipeline where the system
+        message is built by the ContextEngine and prompt builder.
+
+        Args:
+            system_message: The system instruction (persona + user context)
+            user_message:   The user-side message (RAG context + query)
+            max_tokens:     Maximum tokens to generate (default 600)
+
+        Returns:
+            Generated response string
+        """
         try:
             response = self.client.chat.completions.create(
                 model=self.model_id,
                 messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are Sevam, a helpful and responsible medical "
-                            "information assistant. Base your answers only on the "
-                            "provided medical context. Never give definitive diagnoses. "
-                            "Always recommend consulting a qualified doctor. "
-                            "Keep responses clear, empathetic and concise."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "system", "content": system_message},
+                    {"role": "user",   "content": user_message},
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,

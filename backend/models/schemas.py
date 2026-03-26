@@ -25,6 +25,8 @@ class IntentType(str, Enum):
 
 
 class ChatRequest(BaseModel):
+    """Request body for POST /chat."""
+    user_id: str = Field(default="anonymous", description="User identifier")
     message: str = Field(..., min_length=1, max_length=1000)
     session_id: Optional[str] = Field(default=None)
 
@@ -37,11 +39,14 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    """Response from POST /chat."""
     response: str
     sources: list[str] = Field(default_factory=list)
     severity: SeverityLevel
     is_emergency: bool
     session_id: Optional[str] = Field(default=None)
+    food_correlation: dict = Field(default_factory=dict)
+    prakriti: str = Field(default="Unknown")
 
 
 class SymptomAnalysisRequest(BaseModel):
