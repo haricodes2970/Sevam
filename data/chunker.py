@@ -48,18 +48,18 @@ def chunk_text(text: str, chunk_size: int = 200, overlap: int = 40) -> List[str]
     return chunks
 
 
-def chunk_document(doc: dict, chunk_size: int = 200, overlap: int = 40) -> List[dict]:
+def chunk_document(doc: dict, chunk_size: int = 150, overlap: int = 30) -> List[dict]:
     """
-    Split a medical document into multiple chunk documents.
-    
-    Each chunk keeps the original metadata plus a chunk index,
-    so we always know which document a chunk came from.
-    
+    Split a document into multiple chunk documents.
+
+    Each chunk keeps the original metadata (title, dosha, category)
+    plus a chunk index, so we always know which document a chunk came from.
+
     Args:
-        doc: Cleaned document dictionary
+        doc: Cleaned document dictionary with id, title, dosha, category, content
         chunk_size: Words per chunk
         overlap: Overlap words between chunks
-        
+
     Returns:
         List of chunk dictionaries ready for embedding
     """
@@ -73,12 +73,12 @@ def chunk_document(doc: dict, chunk_size: int = 200, overlap: int = 40) -> List[
             'chunk_id': f"{doc['id']}_chunk_{i}",
             'parent_id': doc['id'],
             'title': doc.get('title', ''),
-            'source': doc.get('source', ''),
+            'dosha': doc.get('dosha', ''),
+            'category': doc.get('category', ''),
             'chunk_index': i,
             'total_chunks': len(chunks),
             'content': chunk,
             'word_count': len(chunk.split()),
-            'is_emergency': doc.get('is_emergency', False),
         }
         chunk_docs.append(chunk_doc)
 

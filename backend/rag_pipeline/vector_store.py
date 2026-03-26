@@ -1,21 +1,21 @@
 """
-Vector store module using ChromaDB.
-Stores and retrieves medical document embeddings.
+Vector store module using ChromaDB for Sevam.
+Stores and retrieves Ayurvedic knowledge document embeddings.
+Collection: sevam_knowledge
 """
 
 import chromadb
-from chromadb.config import Settings
 import os
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 CHROMA_DB_PATH = "./data/vector_db"
-COLLECTION_NAME = "medical_knowledge"
+COLLECTION_NAME = "sevam_knowledge"
 
 
 class MedicalVectorStore:
     """
-    Manages the ChromaDB vector database for medical knowledge.
+    Manages the ChromaDB vector database for Ayurvedic knowledge.
     Handles storing, querying, and managing document embeddings.
     """
 
@@ -31,99 +31,123 @@ class MedicalVectorStore:
         print(f"  Connecting to ChromaDB at: {db_path}")
         self.client = chromadb.PersistentClient(path=db_path)
 
-        # Get or create the medical knowledge collection
-        self.collection = self.client.get_or_create_collection(
-            name=COLLECTION_NAME,
-            metadata={"description": "Medical knowledge base for Sevam"}
-        )
-        print(f"  Collection '{COLLECTION_NAME}' ready — {self.collection.count()} docs stored")
+        self.collection = self.get_or_create_collection()
 
-    def add_documents(
-        self,
-        chunk_ids: List[str],
-        embeddings: List[List[float]],
-        documents: List[str],
-        metadatas: List[Dict]
-    ) -> None:
+    def get_or_create_collection(self):
+        """
+        Get existing collection or create a new one.
+
+        Returns:
+            ChromaDB collection instance
+        """
+        collection = self.client.get_or_create_collection(
+            name=COLLECTION_NAME,
+            metadata={"description": "Ayurvedic knowledge base for Sevam"}
+        )
+        print(f"  Collection '{COLLECTION_NAME}' ready — {collection.count()} docs stored")
+        return collection
+
+    def add_documents(self, chunks: List[Dict]) -> None:
         """
         Add document chunks with their embeddings to the vector store.
 
         Args:
-            chunk_ids: Unique ID for each chunk
-            embeddings: Vector embedding for each chunk
-            documents: Raw text content for each chunk
-            metadatas: Metadata dict for each chunk (title, source, etc.)
+            chunks: List of chunk dicts with keys:
+                     chunk_id, embedding, content, title, dosha, category,
+                     parent_id, chunk_index
         """
-        print(f"  Adding {len(chunk_ids)} documents to ChromaDB...")
+        if not chunks:
+            return
 
-        # ChromaDB upsert — adds new or updates existing
+        chunk_ids = [c["chunk_id"] for c in chunks]
+        embeddings = [c["embedding"] for c in chunks]
+        documents = [c["content"] for c in chunks]
+        metadatas = [
+            {
+                "title": c.get("title", ""),
+                "dosha": c.get("dosha", ""),
+                "category": c.get("category", ""),
+                "parent_id": c.get("parent_id", ""),
+                "chunk_index": str(c.get("chunk_index", 0)),
+                "word_count": str(c.get("word_count", 0)),
+            }
+            for c in chunks
+        ]
+
+        print(f"  Adding {len(chunk_ids)} documents to ChromaDB...")
         self.collection.upsert(
             ids=chunk_ids,
             embeddings=embeddings,
             documents=documents,
-            metadatas=metadatas
+            metadatas=metadatas,
         )
         print(f"  Done. Total stored: {self.collection.count()}")
 
-    def query(
+    def query_similar(
         self,
+        query_text: str,
         query_embedding: List[float],
-        n_results: int = 5,
-        where: Dict = None
-    ) -> Dict:
+        n_results: int = 3,
+        where: Optional[Dict] = None,
+    ) -> List[Dict]:
         """
         Find the most semantically similar chunks to a query embedding.
 
         Args:
+            query_text: Original query text (for logging)
             query_embedding: Vector of the user query
             n_results: How many top results to return
-            where: Optional metadata filter (e.g. {"source": "emergency"})
+            where: Optional metadata filter
 
         Returns:
-            ChromaDB results dict with documents, metadatas, distances
+            List of dicts with keys: content, title, dosha, category, distance
         """
+        count = self.collection.count()
+        if count == 0:
+            return []
+
         query_params = {
             "query_embeddings": [query_embedding],
-            "n_results": min(n_results, self.collection.count()),
-            "include": ["documents", "metadatas", "distances"]
+            "n_results": min(n_results, count),
+            "include": ["documents", "metadatas", "distances"],
         }
 
         if where:
             query_params["where"] = where
 
-        return self.collection.query(**query_params)
+        raw = self.collection.query(**query_params)
+        return self._format_results(raw)
 
-    def format_results(self, raw_results: Dict) -> List[Dict]:
+    def _format_results(self, raw_results: Dict) -> List[Dict]:
         """
-        Format raw ChromaDB results into clean readable dicts.
+        Format raw ChromaDB results into clean dicts.
 
         Args:
             raw_results: Raw output from ChromaDB query
 
         Returns:
-            List of formatted result dicts with score, title, content
+            List of formatted result dicts sorted by similarity
         """
         formatted = []
 
         if not raw_results or not raw_results.get("documents"):
             return formatted
 
-        docs      = raw_results["documents"][0]
+        docs = raw_results["documents"][0]
         metadatas = raw_results["metadatas"][0]
         distances = raw_results["distances"][0]
 
         for doc, meta, dist in zip(docs, metadatas, distances):
-            # Convert distance to similarity score (lower distance = higher similarity)
             similarity = round(1 - dist, 4)
             formatted.append({
-                "title":      meta.get("title", "Unknown"),
-                "source":     meta.get("source", "Unknown"),
-                "content":    doc,
+                "content": doc,
+                "title": meta.get("title", "Unknown"),
+                "dosha": meta.get("dosha", ""),
+                "category": meta.get("category", ""),
+                "distance": round(dist, 4),
                 "similarity": similarity,
-                "is_emergency": meta.get("is_emergency", False),
             })
 
-        # Sort by similarity descending
         formatted.sort(key=lambda x: x["similarity"], reverse=True)
         return formatted
 

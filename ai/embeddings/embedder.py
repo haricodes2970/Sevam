@@ -1,21 +1,61 @@
 """
-Embedding engine for Sevam.
+Embedding engine for Sevam — Personalized Ayurvedic Health Companion.
 Converts text into vector representations using SentenceTransformers.
 The same model must be used for both indexing and querying.
+
+Provides both a class-based API (MedicalEmbedder) and standalone
+convenience functions (embed_text, embed_batch).
 """
 
 from sentence_transformers import SentenceTransformer
 from typing import List
-import numpy as np
 
 
 # Using a small but powerful model — good balance of speed and accuracy
 MODEL_NAME = "all-MiniLM-L6-v2"
 
+# Module-level singleton — initialized lazily by standalone functions
+_embedder_instance = None
+
+
+def _get_embedder() -> "MedicalEmbedder":
+    """Return the module-level singleton embedder, creating it on first call."""
+    global _embedder_instance
+    if _embedder_instance is None:
+        _embedder_instance = MedicalEmbedder()
+    return _embedder_instance
+
+
+def embed_text(text: str) -> List[float]:
+    """
+    Embed a single text string into a vector using the default model.
+
+    Args:
+        text: Input text to embed
+
+    Returns:
+        List of floats representing the embedding vector
+    """
+    return _get_embedder().embed_text(text)
+
+
+def embed_batch(texts: List[str], batch_size: int = 32) -> List[List[float]]:
+    """
+    Embed a list of texts efficiently in batches using the default model.
+
+    Args:
+        texts: List of text strings to embed
+        batch_size: Number of texts to process at once
+
+    Returns:
+        List of embedding vectors
+    """
+    return _get_embedder().embed_batch(texts, batch_size=batch_size)
+
 
 class MedicalEmbedder:
     """
-    Wraps SentenceTransformer to generate embeddings for medical text.
+    Wraps SentenceTransformer to generate embeddings for Ayurvedic medical text.
     Loaded once and reused — loading is expensive.
     """
 

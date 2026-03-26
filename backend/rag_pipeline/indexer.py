@@ -1,6 +1,6 @@
 """
-RAG indexing pipeline.
-Loads processed chunks, generates embeddings, stores in ChromaDB.
+RAG indexing pipeline for Sevam.
+Loads Ayurvedic knowledge, cleans, chunks, generates embeddings, stores in ChromaDB.
 
 Run once to build the vector index:
     python backend/rag_pipeline/indexer.py
@@ -14,73 +14,75 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from ai.embeddings.embedder import MedicalEmbedder
 from backend.rag_pipeline.vector_store import MedicalVectorStore
+from data.cleaner import clean_text
+from data.chunker import chunk_document
 
 
-CHUNKS_PATH = "data/processed/processed_chunks.json"
+KNOWLEDGE_PATH = "data/knowledge_sources/ayurveda_knowledge.json"
 
 
-def load_chunks(filepath: str) -> list:
+def load_knowledge(filepath: str) -> list:
     """
-    Load processed chunks from JSON file.
+    Load Ayurvedic knowledge documents from JSON file.
 
     Args:
-        filepath: Path to processed_chunks.json
+        filepath: Path to ayurveda_knowledge.json
 
     Returns:
-        List of chunk dictionaries
+        List of document dictionaries
     """
     with open(filepath, 'r', encoding='utf-8') as f:
-        chunks = json.load(f)
-    print(f"  Loaded {len(chunks)} chunks from {filepath}")
-    return chunks
+        docs = json.load(f)
+    print(f"  Loaded {len(docs)} documents from {filepath}")
+    return docs
 
 
-def run_indexing(chunks_path: str = CHUNKS_PATH) -> None:
+def run_indexing(knowledge_path: str = KNOWLEDGE_PATH) -> None:
     """
     Full indexing pipeline:
-    1. Load chunks
-    2. Generate embeddings
-    3. Store in ChromaDB
+    1. Load Ayurvedic knowledge documents
+    2. Clean and chunk each document
+    3. Generate embeddings
+    4. Store in ChromaDB
 
     Args:
-        chunks_path: Path to the processed chunks JSON file
+        knowledge_path: Path to the Ayurvedic knowledge JSON file
     """
-    print("\n--- Step 1: Loading chunks ---")
-    chunks = load_chunks(chunks_path)
+    print("\n--- Step 1: Loading Ayurvedic knowledge ---")
+    docs = load_knowledge(knowledge_path)
 
-    print("\n--- Step 2: Initializing models ---")
+    print("\n--- Step 2: Cleaning and chunking ---")
+    all_chunks = []
+    for doc in docs:
+        doc["content"] = clean_text(doc["content"])
+        chunks = chunk_document(doc, chunk_size=150, overlap=30)
+        all_chunks.extend(chunks)
+        print(f"  [{doc['id']}] {doc['title']} -> {len(chunks)} chunk(s)")
+
+    print(f"\n  Total chunks: {len(all_chunks)}")
+
+    print("\n--- Step 3: Initializing models ---")
     embedder = MedicalEmbedder()
     vector_store = MedicalVectorStore()
 
-    # Clear old data to avoid duplicates on re-run
     if vector_store.count() > 0:
         print(f"  Found {vector_store.count()} existing docs — clearing for fresh index")
         vector_store.clear()
 
-    print("\n--- Step 3: Generating embeddings ---")
-    texts = [chunk["content"] for chunk in chunks]
+    print("\n--- Step 4: Generating embeddings ---")
+    texts = [chunk["content"] for chunk in all_chunks]
     embeddings = embedder.embed_batch(texts)
 
-    print("\n--- Step 4: Storing in ChromaDB ---")
-    chunk_ids  = [chunk["chunk_id"] for chunk in chunks]
-    documents  = [chunk["content"] for chunk in chunks]
-    metadatas  = [
-        {
-            "title":        chunk.get("title", ""),
-            "source":       chunk.get("source", ""),
-            "chunk_index":  str(chunk.get("chunk_index", 0)),
-            "parent_id":    chunk.get("parent_id", ""),
-            "is_emergency": str(chunk.get("is_emergency", False)),
-            "word_count":   str(chunk.get("word_count", 0)),
-        }
-        for chunk in chunks
-    ]
+    # Attach embeddings to chunks
+    for chunk, emb in zip(all_chunks, embeddings):
+        chunk["embedding"] = emb
 
-    vector_store.add_documents(chunk_ids, embeddings, documents, metadatas)
+    print("\n--- Step 5: Storing in ChromaDB ---")
+    vector_store.add_documents(all_chunks)
 
-    print(f"\n✅ Indexing complete! {vector_store.count()} chunks indexed in ChromaDB.")
+    print(f"\n  Indexing complete! {vector_store.count()} chunks indexed in ChromaDB.")
 
 
 if __name__ == "__main__":
-    print("🔍 Sevam — RAG Indexing Pipeline\n")
+    print("Sevam — Ayurvedic Knowledge Indexer\n")
     run_indexing()
