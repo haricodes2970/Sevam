@@ -30,6 +30,8 @@ Important rules:
 - Always close with a recommendation to see a practitioner for persistent or serious symptoms
 - Do NOT recommend allergens or substances the user is known to be allergic to"""
 
+MIN_RAG_SIMILARITY = -0.5
+
 
 def build_ayurvedic_prompt(
     user_message: str,
@@ -69,7 +71,7 @@ def build_ayurvedic_prompt(
     # ── Ayurvedic knowledge context ───────────────────────────────────────────
     context_parts: List[str] = []
     for i, chunk in enumerate(retrieved_chunks, 1):
-        if chunk.get("similarity", 0) > 0:
+        if chunk.get("similarity", 0) >= MIN_RAG_SIMILARITY:
             dosha_tag = f" [{chunk['dosha']}]" if chunk.get("dosha") else ""
             context_parts.append(
                 f"[Ayurvedic Knowledge {i}: {chunk['title']}{dosha_tag}]\n"
@@ -145,7 +147,7 @@ def build_rag_prompt(
     """
     context_parts = []
     for i, chunk in enumerate(retrieved_chunks, 1):
-        if chunk.get("similarity", 0) > 0:
+        if chunk.get("similarity", 0) >= MIN_RAG_SIMILARITY:
             context_parts.append(
                 f"[Source {i}: {chunk['title']}]\n{chunk['content']}"
             )

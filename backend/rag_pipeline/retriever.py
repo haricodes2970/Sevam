@@ -48,9 +48,17 @@ class MedicalRetriever:
             n_results=n_results,
         )
 
+        # Filter out very distant results (lower relevance for short queries).
+        max_distance = 1.5
+        filtered_results = []
+        for result in results:
+            dist = result.get("distance")
+            if dist is None or dist <= max_distance:
+                filtered_results.append(result)
+
         seen_titles = set()
         unique_results = []
-        for result in results:
+        for result in filtered_results:
             title = result.get("title", "")
             if title not in seen_titles:
                 seen_titles.add(title)

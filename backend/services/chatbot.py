@@ -123,10 +123,11 @@ class SevamChatbot:
         self._add_to_history(message, final_response)
 
         # Build source list from retrieved chunks
+        min_similarity = -0.5
         sources = [
             r["title"]
             for r in retrieved_chunks
-            if r.get("similarity", 0) > 0 and r.get("title")
+            if r.get("similarity", 0) >= min_similarity and r.get("title")
         ]
 
         return {
