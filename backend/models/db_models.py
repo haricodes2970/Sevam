@@ -1,98 +1,106 @@
 """
-SQLAlchemy ORM models — 4 tables.
+Pydantic models for Sevam's 5 MongoDB collections.
+
+Each model mirrors one collection document. Motor stores/retrieves plain dicts;
+call .model_dump() before inserting and Model(**doc) after reading.
 """
 
 import uuid
-import enum
 from datetime import datetime, timezone
-from sqlalchemy import (
-    Column, String, Text, Boolean, Integer,
-    Float, DateTime, ForeignKey, Enum as SAEnum
-)
-from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
-
-from backend.database.connection import Base
+from typing import Literal, Optional
+from pydantic import BaseModel, Field
 
 
-class SeverityEnum(str, enum.Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    EMERGENCY = "EMERGENCY"
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _new_uuid() -> str:
+    """Return a fresh UUID4 string."""
+    return str(uuid.uuid4())
 
 
-class IntentEnum(str, enum.Enum):
-    SYMPTOM_ANALYSIS = "SYMPTOM_ANALYSIS"
-    EMERGENCY_CHECK = "EMERGENCY_CHECK"
-    GENERAL_INFO = "GENERAL_INFO"
-    MEDICATION_QUERY = "MEDICATION_QUERY"
-    FOLLOWUP = "FOLLOWUP"
-    GREETING = "GREETING"
-    UNKNOWN = "UNKNOWN"
+def _utcnow() -> datetime:
+    """Return the current UTC datetime (timezone-aware)."""
+    return datetime.now(timezone.utc)
 
 
-class FeedbackEnum(str, enum.Enum):
-    HELPFUL = "HELPFUL"
-    NOT_HELPFUL = "NOT_HELPFUL"
-    INACCURATE = "INACCURATE"
-    EMERGENCY_MISSED = "EMERGENCY_MISSED"
+# ── 1. users ──────────────────────────────────────────────────────────────────
+
+class DoshaScores(BaseModel):
+    """Relative strength of each Ayurvedic dosha (0.0–100.0)."""
+    vata: float = 0.0
+    pitta: float = 0.0
+    kapha: float = 0.0
 
 
-class Session(Base):
-    __tablename__ = "sessions"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    last_active = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    message_count = Column(Integer, default=0, nullable=False)
-    had_emergency = Column(Boolean, default=False, nullable=False)
-
-    messages = relationship("Message", back_populates="session", cascade="all, delete-orphan")
+class HealthProfile(BaseModel):
+    """Health metadata collected during onboarding or conversation."""
+    conditions: list[str] = Field(default_factory=list)
+    allergies: list[str] = Field(default_factory=list)
+    medications: list[str] = Field(default_factory=list)
+    lifestyle: dict = Field(default_factory=dict)
 
 
-class Message(Base):
-    __tablename__ = "messages"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    user_message = Column(Text, nullable=False)
-    bot_response = Column(Text, nullable=False)
-    sources_used = Column(Text, default="")
-    retrieval_count = Column(Integer, default=0)
-    severity = Column(SAEnum(SeverityEnum), default=SeverityEnum.LOW, nullable=False)
-    is_emergency = Column(Boolean, default=False, nullable=False)
-
-    session = relationship("Session", back_populates="messages")
-    symptom_log = relationship("SymptomLog", back_populates="message", uselist=False, cascade="all, delete-orphan")
-    feedback = relationship("Feedback", back_populates="message", uselist=False, cascade="all, delete-orphan")
+class UserModel(BaseModel):
+    """Document schema for the *users* collection."""
+    user_id: str = Field(default_factory=_new_uuid)
+    created_at: datetime = Field(default_factory=_utcnow)
+    prakriti: Literal["Vata", "Pitta", "Kapha", "Unknown"] = "Unknown"
+    dosha_scores: DoshaScores = Field(default_factory=DoshaScores)
+    health_profile: HealthProfile = Field(default_factory=HealthProfile)
 
 
-class SymptomLog(Base):
-    __tablename__ = "symptom_logs"
+# ── 2. sessions ───────────────────────────────────────────────────────────────
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    intent = Column(SAEnum(IntentEnum), default=IntentEnum.UNKNOWN, nullable=False)
-    intent_confidence = Column(Float, default=0.0)
-    symptoms = Column(Text, default="")
-    triggers = Column(Text, default="")
-    body_parts = Column(Text, default="")
-    duration = Column(String(200), nullable=True)
-    severity_score = Column(Integer, default=1)
-
-    message = relationship("Message", back_populates="symptom_log")
+class SessionModel(BaseModel):
+    """Document schema for the *sessions* collection."""
+    session_id: str = Field(default_factory=_new_uuid)
+    user_id: str
+    created_at: datetime = Field(default_factory=_utcnow)
+    message_count: int = 0
+    is_emergency: bool = False
 
 
-class Feedback(Base):
-    __tablename__ = "feedback"
+# ── 3. messages ───────────────────────────────────────────────────────────────
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    rating = Column(SAEnum(FeedbackEnum), nullable=False)
-    comment = Column(Text, nullable=True)
+class MessageModel(BaseModel):
+    """Document schema for the *messages* collection."""
+    message_id: str = Field(default_factory=_new_uuid)
+    session_id: str
+    user_id: str
+    timestamp: datetime = Field(default_factory=_utcnow)
+    user_message: str
+    bot_response: str
+    sources: list[str] = Field(default_factory=list)
+    severity: str = "LOW"
+    is_emergency: bool = False
 
-    message = relationship("Message", back_populates="feedback")
+
+# ── 4. food_logs ──────────────────────────────────────────────────────────────
+
+class FoodQualities(BaseModel):
+    """Ayurvedic quality breakdown for a logged food item."""
+    hot_cold: Optional[str] = None        # "hot" | "cold" | "neutral"
+    heavy_light: Optional[str] = None     # "heavy" | "light"
+    spicy_bland: Optional[str] = None     # "spicy" | "bland"
+    dosha_impact: dict = Field(default_factory=dict)  # {"vata": "aggravates", ...}
+
+
+class FoodLogModel(BaseModel):
+    """Document schema for the *food_logs* collection."""
+    log_id: str = Field(default_factory=_new_uuid)
+    user_id: str
+    timestamp: datetime = Field(default_factory=_utcnow)
+    raw_text: str
+    meal_type: Literal["breakfast", "lunch", "dinner", "snack"] = "snack"
+    food_qualities: FoodQualities = Field(default_factory=FoodQualities)
+
+
+# ── 5. feedback ───────────────────────────────────────────────────────────────
+
+class FeedbackModel(BaseModel):
+    """Document schema for the *feedback* collection."""
+    feedback_id: str = Field(default_factory=_new_uuid)
+    session_id: str
+    message_id: str
+    rating: Literal["HELPFUL", "NOT_HELPFUL", "INACCURATE", "EMERGENCY_MISSED"]
+    created_at: datetime = Field(default_factory=_utcnow)

@@ -1,1 +1,1 @@
-# Sevam — Personalized Ayurvedic Health Companion
+# Sevam - Personalized Ayurvedic Health Companion

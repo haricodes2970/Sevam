@@ -1,121 +1,313 @@
 """
-Database CRUD service layer.
+Async CRUD service layer for Sevam's 5 MongoDB collections.
+
+All functions are async and use Motor via get_database().
+Exceptions are logged and re-raised so callers can decide how to handle them.
 """
 
-import uuid
-from datetime import datetime, timezone
+import logging
+from datetime import datetime, timezone, timedelta
 from typing import Optional
-from sqlalchemy.orm import Session as DBSession
-from sqlalchemy import desc
 
+from backend.database.connection import get_database
 from backend.models.db_models import (
-    Session, Message, SymptomLog, Feedback,
-    SeverityEnum, IntentEnum, FeedbackEnum
+    UserModel,
+    SessionModel,
+    MessageModel,
+    FoodLogModel,
+    FeedbackModel,
+    DoshaScores,
+    HealthProfile,
+    FoodQualities,
 )
 
+logger = logging.getLogger(__name__)
 
-def get_or_create_session(db: DBSession, session_id: str) -> Session:
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+# ── 1. users ──────────────────────────────────────────────────────────────────
+
+async def create_user(user_id: str) -> UserModel:
+    """Insert a new user document into the *users* collection.
+
+    Args:
+        user_id: Caller-supplied UUID string (typically from the frontend).
+
+    Returns:
+        The newly created UserModel.
+    """
     try:
-        session_uuid = uuid.UUID(session_id)
-    except ValueError:
-        session_uuid = uuid.uuid4()
-
-    session = db.query(Session).filter(Session.id == session_uuid).first()
-    if not session:
-        session = Session(id=session_uuid)
-        db.add(session)
-        db.commit()
-        db.refresh(session)
-    return session
+        db = get_database()
+        user = UserModel(user_id=user_id)
+        await db.users.insert_one(user.model_dump())
+        logger.info("Created user %s", user_id)
+        return user
+    except Exception as exc:
+        logger.error("create_user failed for %s: %s", user_id, exc)
+        raise
 
 
-def update_session_activity(db: DBSession, session: Session, had_emergency: bool = False) -> None:
-    session.last_active = datetime.now(timezone.utc)
-    session.message_count += 1
-    if had_emergency:
-        session.had_emergency = True
-    db.commit()
+async def get_user(user_id: str) -> Optional[UserModel]:
+    """Fetch a user document by user_id.
+
+    Returns:
+        UserModel if the user exists, None otherwise.
+    """
+    try:
+        db = get_database()
+        doc = await db.users.find_one({"user_id": user_id})
+        return UserModel(**doc) if doc else None
+    except Exception as exc:
+        logger.error("get_user failed for %s: %s", user_id, exc)
+        raise
 
 
-def save_message(
-    db: DBSession,
+async def update_user_profile(
+    user_id: str,
+    prakriti: Optional[str] = None,
+    dosha_scores: Optional[DoshaScores] = None,
+    health_profile: Optional[HealthProfile] = None,
+) -> bool:
+    """Partially update a user's prakriti, dosha scores, or health profile.
+
+    Only the fields that are not None will be written.
+
+    Returns:
+        True if a document was modified, False if the user was not found.
+    """
+    try:
+        db = get_database()
+        updates: dict = {}
+        if prakriti is not None:
+            updates["prakriti"] = prakriti
+        if dosha_scores is not None:
+            updates["dosha_scores"] = dosha_scores.model_dump()
+        if health_profile is not None:
+            updates["health_profile"] = health_profile.model_dump()
+
+        if not updates:
+            return False
+
+        result = await db.users.update_one(
+            {"user_id": user_id}, {"$set": updates}
+        )
+        return result.modified_count > 0
+    except Exception as exc:
+        logger.error("update_user_profile failed for %s: %s", user_id, exc)
+        raise
+
+
+# ── 2. sessions ───────────────────────────────────────────────────────────────
+
+async def create_session(session_id: str, user_id: str) -> SessionModel:
+    """Insert a new session document into the *sessions* collection.
+
+    Args:
+        session_id: UUID string for the session.
+        user_id:    UUID string of the owning user.
+
+    Returns:
+        The newly created SessionModel.
+    """
+    try:
+        db = get_database()
+        session = SessionModel(session_id=session_id, user_id=user_id)
+        await db.sessions.insert_one(session.model_dump())
+        logger.info("Created session %s for user %s", session_id, user_id)
+        return session
+    except Exception as exc:
+        logger.error("create_session failed (%s / %s): %s", session_id, user_id, exc)
+        raise
+
+
+async def get_session(session_id: str) -> Optional[SessionModel]:
+    """Fetch a session document by session_id.
+
+    Returns:
+        SessionModel if found, None otherwise.
+    """
+    try:
+        db = get_database()
+        doc = await db.sessions.find_one({"session_id": session_id})
+        return SessionModel(**doc) if doc else None
+    except Exception as exc:
+        logger.error("get_session failed for %s: %s", session_id, exc)
+        raise
+
+
+async def update_session(
     session_id: str,
+    increment_message_count: bool = True,
+    is_emergency: bool = False,
+) -> bool:
+    """Increment the message count and/or mark a session as an emergency.
+
+    Returns:
+        True if the document was modified, False if the session was not found.
+    """
+    try:
+        db = get_database()
+        update: dict = {}
+        if increment_message_count:
+            update["$inc"] = {"message_count": 1}
+        if is_emergency:
+            update.setdefault("$set", {})["is_emergency"] = True
+
+        if not update:
+            return False
+
+        result = await db.sessions.update_one({"session_id": session_id}, update)
+        return result.modified_count > 0
+    except Exception as exc:
+        logger.error("update_session failed for %s: %s", session_id, exc)
+        raise
+
+
+# ── 3. messages ───────────────────────────────────────────────────────────────
+
+async def save_message(
+    session_id: str,
+    user_id: str,
     user_message: str,
     bot_response: str,
     sources: list[str],
     severity: str,
     is_emergency: bool,
-) -> Message:
-    session = get_or_create_session(db, session_id)
+) -> MessageModel:
+    """Persist a chat exchange to the *messages* collection.
 
+    Returns:
+        The saved MessageModel (with auto-generated message_id and timestamp).
+    """
     try:
-        severity_enum = SeverityEnum(severity)
-    except ValueError:
-        severity_enum = SeverityEnum.LOW
-
-    message = Message(
-        session_id=session.id,
-        user_message=user_message,
-        bot_response=bot_response,
-        sources_used=", ".join(sources),
-        retrieval_count=len(sources),
-        severity=severity_enum,
-        is_emergency=is_emergency,
-    )
-    db.add(message)
-    db.commit()
-    db.refresh(message)
-    update_session_activity(db, session, had_emergency=is_emergency)
-    return message
+        db = get_database()
+        message = MessageModel(
+            session_id=session_id,
+            user_id=user_id,
+            user_message=user_message,
+            bot_response=bot_response,
+            sources=sources,
+            severity=severity,
+            is_emergency=is_emergency,
+        )
+        await db.messages.insert_one(message.model_dump())
+        logger.info("Saved message %s (session=%s)", message.message_id, session_id)
+        return message
+    except Exception as exc:
+        logger.error("save_message failed: %s", exc)
+        raise
 
 
-def save_symptom_log(db: DBSession, message_id: uuid.UUID, nlp_result: dict) -> SymptomLog:
+async def get_session_messages(session_id: str) -> list[MessageModel]:
+    """Retrieve all messages for a session, ordered by timestamp ascending.
+
+    Returns:
+        List of MessageModel objects (may be empty if session has no messages).
+    """
     try:
-        intent = IntentEnum(nlp_result.get("intent", "UNKNOWN"))
-    except ValueError:
-        intent = IntentEnum.UNKNOWN
-
-    log = SymptomLog(
-        message_id=message_id,
-        intent=intent,
-        intent_confidence=nlp_result.get("intent_confidence", 0.0),
-        symptoms=", ".join(nlp_result.get("symptoms", [])),
-        triggers=", ".join(nlp_result.get("triggers", [])),
-        body_parts=", ".join(nlp_result.get("body_parts", [])),
-        duration=nlp_result.get("duration"),
-        severity_score=nlp_result.get("severity_score", 1),
-    )
-    db.add(log)
-    db.commit()
-    db.refresh(log)
-    return log
+        db = get_database()
+        cursor = db.messages.find(
+            {"session_id": session_id}, sort=[("timestamp", 1)]
+        )
+        docs = await cursor.to_list(length=None)
+        return [MessageModel(**doc) for doc in docs]
+    except Exception as exc:
+        logger.error("get_session_messages failed for %s: %s", session_id, exc)
+        raise
 
 
-def save_feedback(db: DBSession, message_id: str, rating: str, comment: Optional[str] = None) -> Optional[Feedback]:
+# ── 4. food_logs ──────────────────────────────────────────────────────────────
+
+async def save_food_log(
+    user_id: str,
+    raw_text: str,
+    meal_type: str = "snack",
+    food_qualities: Optional[FoodQualities] = None,
+) -> FoodLogModel:
+    """Persist a food log entry for a user.
+
+    Args:
+        user_id:        The user logging the food.
+        raw_text:       The original free-text description of the food.
+        meal_type:      One of breakfast / lunch / dinner / snack.
+        food_qualities: Optional Ayurvedic quality breakdown.
+
+    Returns:
+        The saved FoodLogModel (with auto-generated log_id and timestamp).
+    """
     try:
-        msg_uuid = uuid.UUID(message_id)
-        rating_enum = FeedbackEnum(rating)
-    except ValueError:
-        return None
-
-    existing = db.query(Feedback).filter(Feedback.message_id == msg_uuid).first()
-    if existing:
-        existing.rating = rating_enum
-        existing.comment = comment
-        db.commit()
-        db.refresh(existing)
-        return existing
-
-    feedback = Feedback(message_id=msg_uuid, rating=rating_enum, comment=comment)
-    db.add(feedback)
-    db.commit()
-    db.refresh(feedback)
-    return feedback
+        db = get_database()
+        log = FoodLogModel(
+            user_id=user_id,
+            raw_text=raw_text,
+            meal_type=meal_type,  # type: ignore[arg-type]
+            food_qualities=food_qualities or FoodQualities(),
+        )
+        await db.food_logs.insert_one(log.model_dump())
+        logger.info("Saved food log %s for user %s", log.log_id, user_id)
+        return log
+    except Exception as exc:
+        logger.error("save_food_log failed for user %s: %s", user_id, exc)
+        raise
 
 
-def get_recent_sessions(db: DBSession, limit: int = 20) -> list[Session]:
-    return db.query(Session).order_by(desc(Session.last_active)).limit(limit).all()
+async def get_recent_food_logs(user_id: str, days: int = 7) -> list[FoodLogModel]:
+    """Retrieve food logs for a user from the last N days.
+
+    Args:
+        user_id: The user whose logs to fetch.
+        days:    Look-back window in days (default 7).
+
+    Returns:
+        List of FoodLogModel objects ordered by timestamp descending.
+    """
+    try:
+        db = get_database()
+        since = _utcnow() - timedelta(days=days)
+        cursor = db.food_logs.find(
+            {"user_id": user_id, "timestamp": {"$gte": since}},
+            sort=[("timestamp", -1)],
+        )
+        docs = await cursor.to_list(length=None)
+        return [FoodLogModel(**doc) for doc in docs]
+    except Exception as exc:
+        logger.error("get_recent_food_logs failed for user %s: %s", user_id, exc)
+        raise
 
 
-def get_emergency_count(db: DBSession) -> int:
-    return db.query(Message).filter(Message.is_emergency == True).count()
+# ── 5. feedback ───────────────────────────────────────────────────────────────
+
+async def save_feedback(
+    session_id: str,
+    message_id: str,
+    rating: str,
+) -> FeedbackModel:
+    """Persist user feedback on a bot message to the *feedback* collection.
+
+    Args:
+        session_id: The session the rated message belongs to.
+        message_id: The specific message being rated.
+        rating:     One of HELPFUL / NOT_HELPFUL / INACCURATE / EMERGENCY_MISSED.
+
+    Returns:
+        The saved FeedbackModel.
+    """
+    try:
+        db = get_database()
+        feedback = FeedbackModel(
+            session_id=session_id,
+            message_id=message_id,
+            rating=rating,  # type: ignore[arg-type]
+        )
+        await db.feedback.insert_one(feedback.model_dump())
+        logger.info(
+            "Saved feedback %s for message %s (rating=%s)",
+            feedback.feedback_id, message_id, rating,
+        )
+        return feedback
+    except Exception as exc:
+        logger.error("save_feedback failed: %s", exc)
+        raise

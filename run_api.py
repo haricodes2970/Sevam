@@ -1,5 +1,5 @@
 """
-SympDecoder API — entrypoint.
+Sevam API — uvicorn entrypoint.
 Run: python run_api.py
 """
 

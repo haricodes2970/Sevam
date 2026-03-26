@@ -1,58 +1,59 @@
-import json
-from pathlib import Path
+"""
+Health-check endpoint for the Sevam API.
+
+GET /health-check
+  - Pings MongoDB Atlas and reports connection status
+  - Returns app name, version, and overall health status
+"""
+
 from fastapi import APIRouter
-from backend.models.schemas import HealthResponse, ServiceStatus
+from pydantic import BaseModel
 
-router = APIRouter()
+from backend.database.connection import get_database
 
-PROCESSED_CHUNKS_PATH = Path("data/processed/processed_chunks.json")
-VECTOR_DB_PATH = Path("data/vector_db")
+router = APIRouter(tags=["System"])
 
 
-def _check_data_layer() -> ServiceStatus:
+class ServiceStatus(BaseModel):
+    status: str               # "ok" | "down"
+    detail: str | None = None
+
+
+class HealthResponse(BaseModel):
+    app: str
+    version: str
+    status: str               # "healthy" | "unhealthy"
+    services: dict[str, ServiceStatus]
+
+
+async def _check_mongodb() -> ServiceStatus:
+    """Ping the MongoDB Atlas deployment and return its status."""
     try:
-        if not PROCESSED_CHUNKS_PATH.exists():
-            return ServiceStatus(status="down", detail="processed_chunks.json not found")
-        with open(PROCESSED_CHUNKS_PATH) as f:
-            chunks = json.load(f)
-        return ServiceStatus(status="ok", detail=f"{len(chunks)} chunks loaded")
-    except Exception as e:
-        return ServiceStatus(status="down", detail=str(e))
+        db = get_database()
+        await db.client.admin.command("ping")
+        return ServiceStatus(status="ok", detail="MongoDB Atlas reachable")
+    except Exception as exc:
+        return ServiceStatus(status="down", detail=str(exc))
 
 
-def _check_vector_db() -> ServiceStatus:
-    try:
-        if not VECTOR_DB_PATH.exists():
-            return ServiceStatus(status="down", detail="Vector DB not found — run indexer.py first")
-        return ServiceStatus(status="ok")
-    except Exception as e:
-        return ServiceStatus(status="down", detail=str(e))
-
-
-def _check_nlp() -> ServiceStatus:
-    try:
-        import spacy
-        spacy.load("en_core_web_sm")
-        return ServiceStatus(status="ok")
-    except Exception as e:
-        return ServiceStatus(status="down", detail=str(e))
-
-
-@router.get("/health-check", response_model=HealthResponse, tags=["System"])
+@router.get("/health-check", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    services = {
-        "data_layer": _check_data_layer(),
-        "vector_db": _check_vector_db(),
-        "nlp": _check_nlp(),
-    }
-    all_ok = all(s.status == "ok" for s in services.values())
-    any_down = any(s.status == "down" for s in services.values())
+    """Return the health of the Sevam API and its dependencies.
 
-    if all_ok:
-        overall = "healthy"
-    elif any_down:
-        overall = "unhealthy"
-    else:
-        overall = "degraded"
+    Checks:
+      - MongoDB Atlas connectivity via ping command
 
-    return HealthResponse(status=overall, version="1.0.0", services=services)
+    Returns:
+      overall status = "healthy" only when all services report "ok".
+    """
+    mongodb_status = await _check_mongodb()
+
+    services = {"mongodb": mongodb_status}
+    overall = "healthy" if mongodb_status.status == "ok" else "unhealthy"
+
+    return HealthResponse(
+        app="Sevam",
+        version="1.0.0",
+        status=overall,
+        services=services,
+    )
